@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "jenner-sas": {
+      "command": "uvx",
+      "args": ["jenner-sas-mcp"],
+      "env": {
+        "JENNER_API_KEY": "your-api-key-optional"
+      }
+    }
+  }
+}

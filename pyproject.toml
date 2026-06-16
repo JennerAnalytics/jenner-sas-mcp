@@ -1,0 +1,42 @@
+[project]
+name = "jenner-sas-mcp"
+version = "0.1.0"
+description = "MCP server for the Jenner SAS-compatible run API — run and validate SAS from any MCP client, no SAS licence required."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jenner Analytics" }]
+keywords = ["mcp", "model-context-protocol", "sas", "jenner", "llm", "claude"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "httpx>=0.27",
+]
+
+[project.urls]
+Homepage = "https://jenneranalytics.com"
+Repository = "https://github.com/JennerAnalytics/jenner-sas-mcp"
+"API Reference" = "https://api.jenneranalytics.com"
+
+[project.scripts]
+jenner-sas-mcp = "jenner_sas_mcp.server:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jenner_sas_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
