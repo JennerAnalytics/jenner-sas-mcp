@@ -4,8 +4,8 @@ The Jenner engine runs SAS/Jenner programs in a locked-down sandbox and
 returns structured results (log, listing/stdout, output files, WORK
 datasets, diagnostics). This server wraps the public HTTP API at
 ``https://api.jenneranalytics.com`` so any MCP-capable client (Claude
-Desktop, Claude Code, etc.) can run and validate SAS without a SAS
-licence.
+Desktop, Claude Code, etc.) can run and validate SAS programs without a SAS
+Institute licence.
 
 Configuration (environment variables):
 

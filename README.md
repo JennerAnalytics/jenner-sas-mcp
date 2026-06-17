@@ -1,8 +1,8 @@
 # Jenner SAS MCP Server
 
-Run and validate **SAS** from any [Model Context Protocol](https://modelcontextprotocol.io)
+Run and validate **SAS®** programs from any [Model Context Protocol](https://modelcontextprotocol.io)
 client — Claude Desktop, Claude Code, Cursor, and others — without a SAS
-licence. This server wraps the public Jenner run API
+Institute licence. This server wraps the public Jenner run API
 (`https://api.jenneranalytics.com`), which executes SAS-compatible programs in
 a locked-down sandbox and returns the log, listing, output files, WORK
 datasets, and diagnostics as structured JSON.
@@ -100,7 +100,7 @@ environment variables above through your client's server configuration.
 
 Once connected, ask the model things like:
 
-- *"Run this SAS and show me the means: `proc means data=sashelp.class; var height weight; run;`"*
+- *"Run this SAS program and show me the means: `proc means data=sashelp.class; var height weight; run;`"*
 - *"Validate this program before we run it, then fix any errors."*
 - *"Simulate 1000 draws from a normal, summarize them, and don't make it deterministic."*
 - *"Run my regression and preview the `outstat` dataset."*
@@ -158,3 +158,10 @@ npx @modelcontextprotocol/inspector uvx jenner-sas-mcp
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
+
+---
+
+SAS and all other SAS Institute Inc. product or service names are registered
+trademarks or trademarks of SAS Institute Inc. in the USA and other countries.
+® indicates USA registration. Jenner is not affiliated with or endorsed by SAS
+Institute Inc.
