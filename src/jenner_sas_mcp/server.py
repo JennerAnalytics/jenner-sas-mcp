@@ -21,6 +21,8 @@ Configuration (environment variables):
 
 from __future__ import annotations
 
+import csv
+import io
 import os
 from typing import Any
 
@@ -145,6 +147,39 @@ def _error(exc: Exception) -> dict[str, Any]:
             ),
         }
     return {"error": "request_failed", "message": str(exc)}
+
+
+def _parse_dataset_preview(resp: httpx.Response) -> dict[str, Any]:
+    """Normalize a dataset-preview response into a structured dict.
+
+    The Jenner API serves dataset previews as **CSV** (``text/csv``)
+    regardless of the dataset's on-disk format (Avro, Parquet, …). Earlier
+    this tool called ``resp.json()`` directly, which raised ``JSONDecodeError``
+    on the CSV body — surfacing to the model as a failed/empty preview (the
+    rough edge users hit on a 1-row Avro dataset). Parse the CSV into the
+    documented ``{columns, rows, row_count}`` shape instead, while still
+    passing through a genuine JSON body if the API ever serves one.
+
+    Values are returned as strings (CSV carries no type information); the
+    dataset's row/column metadata and true row count come from the run's
+    ``datasets`` entry. ``row_count`` here is the number of rows in this
+    preview sample, which may be fewer than the dataset's total.
+    """
+    content_type = resp.headers.get("content-type", "")
+    if "json" in content_type.lower():
+        return resp.json()
+
+    records = list(csv.reader(io.StringIO(resp.text or "")))
+    if not records:
+        return {"columns": [], "rows": [], "row_count": 0, "format": "csv"}
+    columns = records[0]
+    rows = [dict(zip(columns, values)) for values in records[1:] if values]
+    return {
+        "columns": columns,
+        "rows": rows,
+        "row_count": len(rows),
+        "format": "csv",
+    }
 
 
 mcp = FastMCP("jenner-sas")
@@ -283,9 +318,12 @@ async def dataset_preview(
         access_token: The ``access_token`` returned by ``run_sas``.
 
     Returns:
-        The dataset preview JSON (row/column counts and a sample of rows).
-        For the complete dataset, use the ``download_url`` from the run's
-        ``datasets`` entry.
+        ``{"columns": [...], "rows": [{col: value, ...}, ...], "row_count":
+        N, "format": "csv"}``. Values are strings (the preview is served as
+        CSV, which carries no type information); ``row_count`` is the number
+        of rows in this sample, which may be fewer than the dataset's total.
+        For the complete, typed dataset use the ``download_url`` from the
+        run's ``datasets`` entry.
     """
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
@@ -295,7 +333,7 @@ async def dataset_preview(
                 headers=_auth_headers(),
             )
             resp.raise_for_status()
-            return resp.json()
+            return _parse_dataset_preview(resp)
     except Exception as exc:  # noqa: BLE001
         return _error(exc)
 
