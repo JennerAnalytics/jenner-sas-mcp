@@ -79,6 +79,47 @@ def test_summarize_run_error_severity():
     assert s["ok"] is False
 
 
+def _csv_response(text, content_type="text/csv; charset=utf-8"):
+    req = httpx.Request("GET", "https://example/v1/run/r/datasets/a")
+    return httpx.Response(
+        200, headers={"content-type": content_type}, text=text, request=req
+    )
+
+
+def test_parse_dataset_preview_csv():
+    # The 1-row Avro dataset that used to come back empty (resp.json() raised
+    # JSONDecodeError on the CSV body).
+    out = server._parse_dataset_preview(_csv_response("x\n1\n"))
+    assert out == {
+        "columns": ["x"],
+        "rows": [{"x": "1"}],
+        "row_count": 1,
+        "format": "csv",
+    }
+
+
+def test_parse_dataset_preview_quoted_comma():
+    out = server._parse_dataset_preview(_csv_response('name,id\n"Smith, John",1\nDoe,2\n'))
+    assert out["columns"] == ["name", "id"]
+    assert out["rows"][0] == {"name": "Smith, John", "id": "1"}
+    assert out["row_count"] == 2
+
+
+def test_parse_dataset_preview_header_only_and_empty():
+    header_only = server._parse_dataset_preview(_csv_response("x\n"))
+    assert header_only == {"columns": ["x"], "rows": [], "row_count": 0, "format": "csv"}
+
+    empty = server._parse_dataset_preview(_csv_response(""))
+    assert empty == {"columns": [], "rows": [], "row_count": 0, "format": "csv"}
+
+
+def test_parse_dataset_preview_passes_through_json():
+    # Future-proof: if the API ever serves JSON, return it untouched.
+    resp = _csv_response('{"columns": ["x"], "rows": [{"x": 1}]}', content_type="application/json")
+    out = server._parse_dataset_preview(resp)
+    assert out == {"columns": ["x"], "rows": [{"x": 1}]}
+
+
 def test_error_classification():
     req = httpx.Request("POST", "https://example/v1/run")
     resp = httpx.Response(403, text="forbidden", request=req)
@@ -188,6 +229,44 @@ async def test_get_run_returns_unclipped(monkeypatch):
         out = await server.get_run("r", "tok")
     assert out["log"] == big  # not clipped on explicit retrieval
     assert cap["params"]["token"] == "tok"
+
+
+class _CsvStubClient:
+    """Async-context client whose GET returns a real httpx.Response (CSV)."""
+
+    def __init__(self, text, capture):
+        self._text = text
+        self._capture = capture
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+    async def get(self, url, **kwargs):
+        self._capture["url"] = url
+        self._capture.update(kwargs)
+        req = httpx.Request("GET", url)
+        return httpx.Response(
+            200, headers={"content-type": "text/csv; charset=utf-8"},
+            text=self._text, request=req,
+        )
+
+
+@pytest.mark.asyncio
+async def test_dataset_preview_parses_csv_body(monkeypatch):
+    # Regression: the API serves previews as CSV; the tool must not call
+    # resp.json() (which raised and surfaced as an empty/failed preview).
+    monkeypatch.delenv("JENNER_API_KEY", raising=False)
+    capture: dict = {}
+    factory = lambda *a, **k: _CsvStubClient("x\n1\n", capture)  # noqa: E731
+    with mock.patch.object(server.httpx, "AsyncClient", factory):
+        out = await server.dataset_preview("r_1", "a", "tok")
+    assert out == {"columns": ["x"], "rows": [{"x": "1"}], "row_count": 1, "format": "csv"}
+    assert "error" not in out
+    assert capture["url"].endswith("/v1/run/r_1/datasets/a")
+    assert capture["params"]["token"] == "tok"
 
 
 @pytest.mark.asyncio
