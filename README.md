@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/jenneranalytics-jenner-sas-mcp-badge.png)](https://mseep.ai/app/jenneranalytics-jenner-sas-mcp)
+
 # Jenner SAS MCP Server
 
 Run and validate **SAS®** programs from any [Model Context Protocol](https://modelcontextprotocol.io)
