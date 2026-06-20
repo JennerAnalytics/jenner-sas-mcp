@@ -21,24 +21,19 @@ standard SAS (DATA steps, PROCs, macros) and it runs as-is.
 
 ## Quickstart
 
-The server speaks MCP over stdio. The fastest way to run it is with
-[`uv`](https://docs.astral.sh/uv/) (no manual install step — `uvx` fetches and
-runs it on demand):
+The server speaks MCP over stdio. Install directly from this repository with
+[`uv`](https://docs.astral.sh/uv/) (no manual install step):
 
 ```bash
-uvx jenner-sas-mcp
+uvx --from git+https://github.com/JennerAnalytics/jenner-sas-mcp jenner-sas-mcp
 ```
 
-Or install it into an environment with pip:
+Or install with pip:
 
 ```bash
-pip install jenner-sas-mcp
+pip install git+https://github.com/JennerAnalytics/jenner-sas-mcp
 jenner-sas-mcp        # starts the stdio server
 ```
-
-> Until the package is published to PyPI, install from this repository:
-> `uvx --from git+https://github.com/JennerAnalytics/jenner-sas-mcp jenner-sas-mcp`
-> or `pip install git+https://github.com/JennerAnalytics/jenner-sas-mcp`.
 
 ## Configuration
 
@@ -63,7 +58,7 @@ Windows: `%APPDATA%\Claude\claude_desktop_config.json`) and add:
   "mcpServers": {
     "jenner-sas": {
       "command": "uvx",
-      "args": ["jenner-sas-mcp"],
+      "args": ["--from", "git+https://github.com/JennerAnalytics/jenner-sas-mcp", "jenner-sas-mcp"],
       "env": {
         "JENNER_API_KEY": "your-api-key-optional"
       }
@@ -77,16 +72,25 @@ Restart Claude Desktop. The `jenner-sas` tools appear in the tools menu.
 
 ### Claude Code
 
+Add the server with your API key (omit `--env` if running anonymously):
+
 ```bash
-claude mcp add jenner-sas --env JENNER_API_KEY=your-key -- uvx jenner-sas-mcp
+claude mcp add jenner-sas --env JENNER_API_KEY=your-key -- uvx --from git+https://github.com/JennerAnalytics/jenner-sas-mcp jenner-sas-mcp
 ```
 
-Or, for a project-scoped server checked into the repo, add it to `.mcp.json`:
+For a project-scoped server checked into the repo, add to `.mcp.json` (set
+`JENNER_API_KEY` in your shell environment or via `claude mcp add` above):
 
 ```json
 {
   "mcpServers": {
-    "jenner-sas": { "command": "uvx", "args": ["jenner-sas-mcp"] }
+    "jenner-sas": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/JennerAnalytics/jenner-sas-mcp", "jenner-sas-mcp"],
+      "env": {
+        "JENNER_API_KEY": "your-api-key-optional"
+      }
+    }
   }
 }
 ```
