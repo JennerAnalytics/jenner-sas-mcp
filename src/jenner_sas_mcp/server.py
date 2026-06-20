@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from urllib.parse import quote as _quote
 
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -216,7 +217,7 @@ async def validate_sas(script: str) -> dict[str, Any]:
         script: The SAS/Jenner source to validate.
 
     Returns:
-        ``{"valid": bool, "diagnostics": [{"severity", "message"}, ...]}``.
+        ``{"valid": bool, "diagnostics": [{"severity": str, "message": str}, ...]}``.
         An invalid script is a normal result, not an error — read the
         diagnostics to see what to fix.
     """
@@ -253,7 +254,7 @@ async def get_run(run_id: str, access_token: str) -> dict[str, Any]:
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{_api_url()}/v1/run/{run_id}",
+                f"{_api_url()}/v1/run/{_quote(run_id, safe='')}",
                 params={"token": access_token},
                 headers=_auth_headers(),
             )
@@ -290,7 +291,7 @@ async def dataset_preview(
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{_api_url()}/v1/run/{run_id}/datasets/{dataset}",
+                f"{_api_url()}/v1/run/{_quote(run_id, safe='')}/datasets/{_quote(dataset, safe='')}",
                 params={"token": access_token},
                 headers=_auth_headers(),
             )

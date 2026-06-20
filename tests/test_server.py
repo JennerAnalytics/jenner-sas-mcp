@@ -191,6 +191,25 @@ async def test_get_run_returns_unclipped(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_dataset_preview(monkeypatch):
+    monkeypatch.delenv("JENNER_API_KEY", raising=False)
+    payload = {"rows": 2, "columns": ["id", "x"], "data": [{"id": 1, "x": 9}]}
+    with _stub_httpx(payload) as cap:
+        out = await server.dataset_preview("r_42", "my dataset", "tok")
+    assert out["rows"] == 2
+    assert cap["url"].endswith("/v1/run/r_42/datasets/my%20dataset")
+    assert cap["params"]["token"] == "tok"
+
+
+@pytest.mark.asyncio
+async def test_get_run_url_encodes_run_id(monkeypatch):
+    monkeypatch.delenv("JENNER_API_KEY", raising=False)
+    with _stub_httpx({"run_id": "r/1", "exit_code": 0, "log": "", "output": ""}) as cap:
+        await server.get_run("r/1", "tok")
+    assert "/r%2F1" in cap["url"]
+
+
+@pytest.mark.asyncio
 async def test_api_url_override(monkeypatch):
     monkeypatch.setenv("JENNER_API_URL", "http://localhost:3000/")
     with _stub_httpx({"exit_code": 0}) as cap:
