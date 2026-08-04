@@ -9,6 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      # One bad cell must not mask the state of the others.
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
@@ -16,7 +17,8 @@ jobs:
         # renamed FastMCP to MCPServer; src/jenner_sas_mcp/_compat.py picks the
         # right one. Without this axis a break under either major ships
         # silently — which is exactly how the package came to be uninstallable
-        # against a current index.
+        # against a current index. Both majors require Python >=3.10, so all
+        # four cells are valid.
         mcp-version: ["<2", ">=2"]
     steps:
       - uses: actions/checkout@v4
