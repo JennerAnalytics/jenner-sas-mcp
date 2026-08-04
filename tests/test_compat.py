@@ -43,3 +43,49 @@ async def test_tools_register_under_whichever_major_is_installed() -> None:
 
     names = {t.name for t in await mcp.list_tools()}
     assert names == {"run_sas", "validate_sas", "get_run", "dataset_preview"}
+
+
+# --- make_server ----------------------------------------------------------
+#
+# The constructors are not quite identical: 2.x takes `version=`, 1.x does not
+# and raises TypeError on an unexpected keyword. `make_server` filters by
+# signature rather than branching on MCP_MAJOR, so a keyword that appears in a
+# future point release starts working without a code change, and one that is
+# withdrawn stops being passed instead of raising.
+
+
+def test_make_server_drops_keywords_this_major_rejects() -> None:
+    from jenner_sas_mcp._compat import make_server
+
+    # `version` exists only on 2.x. Passing it unconditionally is what a naive
+    # port does, and it is a TypeError on 1.x.
+    srv = make_server("t", version="9.9.9", instructions="hello")
+    assert srv is not None
+
+
+def test_make_server_ignores_a_keyword_neither_major_has() -> None:
+    from jenner_sas_mcp._compat import make_server
+
+    srv = make_server("t", definitely_not_a_real_kwarg=object())
+    assert srv is not None
+
+
+def test_make_server_passes_through_what_the_major_does_accept() -> None:
+    from jenner_sas_mcp._compat import make_server
+
+    # `instructions` is on both majors, so it must survive the filter — a
+    # filter that dropped everything would still satisfy the tests above.
+    srv = make_server("t", instructions="MARKER_INSTRUCTIONS")
+    assert srv.instructions == "MARKER_INSTRUCTIONS"
+
+
+def test_the_server_reports_the_package_version_not_the_sdk_version() -> None:
+    """serverInfo.version used to be wrong under both majors.
+
+    Under 1.x it reported the *mcp library's* version (e.g. "1.27.2"); under
+    2.x it was an empty string. Neither told a client what it was talking to.
+    """
+    from jenner_sas_mcp.server import __version__
+
+    assert __version__
+    assert not __version__.startswith("1.2")  # not the SDK's version

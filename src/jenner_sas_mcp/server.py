@@ -24,13 +24,20 @@ from __future__ import annotations
 import csv
 import io
 import os
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 import httpx
 
-from ._compat import Server
+from ._compat import make_server
+from .prompts import SERVER_INSTRUCTIONS, register_prompts
 
 __all__ = ["mcp", "main"]
+
+try:
+    __version__ = version("jenner-sas-mcp")
+except PackageNotFoundError:  # running from a source tree, not installed
+    __version__ = "0.0.0+source"
 
 DEFAULT_API_URL = "https://api.jenneranalytics.com"
 # Generous default so the network round-trip dominates, not the engine.
@@ -183,7 +190,18 @@ def _parse_dataset_preview(resp: httpx.Response) -> dict[str, Any]:
     }
 
 
-mcp = Server("jenner-sas")
+mcp = make_server(
+    "jenner-sas",
+    version=__version__,
+    # Delivered to the model at initialize, unprompted — the only orientation
+    # channel that does not depend on a human invoking a prompt. See
+    # prompts.py for why this and not just the templates.
+    instructions=SERVER_INSTRUCTIONS,
+)
+
+# Prompt templates: the long forms of what the instructions summarise, for
+# when the model (or the user) needs the detail. See prompts.py.
+register_prompts(mcp)
 
 
 @mcp.tool()
