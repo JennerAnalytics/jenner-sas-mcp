@@ -19,28 +19,46 @@ standard SAS (DATA steps, PROCs, macros) and it runs as-is.
 | `get_run` | Re-fetch a completed run by id with the **full** (unclipped) log and listing. |
 | `dataset_preview` | Preview the rows of a WORK dataset produced by a run. |
 
-## Prompt templates
+## Orientation: what the model cannot already know
 
-The server also ships eight prompts. They exist because a model asked to
-"write some SAS" writes *SAS*, and Jenner diverges from SAS in a few places
-that otherwise produce subtly wrong code — chiefly that **Avro, not SAS7BDAT,
-is the default storage engine**.
+A model already knows how to write SAS, profile a dataset, and read a log.
+Telling it how to do those is padding. What it genuinely cannot know is:
+
+1. **Where to learn more** — it has no idea `docs.jenneranalytics.com` exists.
+2. **How to get started with what Jenner has and SAS does not** — `PROC FSQL`,
+   `PROC GQL`, `PROC S3`, `PROC AI`, native database `LIBNAME`s. No training
+   data covers these, so an unaided model invents the syntax.
+3. **That its SAS knowledge transfers.** Told only "this is a different
+   engine", a model turns cautious and hedges on ordinary SAS. Most programs
+   run unchanged, and saying so *first* measurably improves first attempts.
+4. **The affordances of this server** — that a run returns every WORK dataset
+   with a preview URL, that logs are clipped with `get_run` to fetch the rest,
+   that determinism is a flag, and that **WORK does not persist between
+   `run_sas` calls**.
+
+Those four are delivered two ways.
+
+**Server instructions**, handed to the model at `initialize` whether or not a
+human does anything. This is the only channel that reaches an autonomous
+model, so it carries the irreducible core of all four points — including the
+one divergence most likely to produce a silently unusable artifact: **Avro,
+not SAS7BDAT, is the default storage engine.** It is kept under 2 KB because
+it is paid for on every session.
+
+**Prompt templates**, the long forms, for when the detail is actually needed:
 
 | Prompt | What it does |
 |--------|--------------|
-| `jenner_vs_sas` | The orientation: every divergence from SAS that changes what you should write. |
-| `write_jenner_program` | Write a program for a task, with Jenner's defaults already accounted for. Optional `storage_format`. |
-| `port_sas_program` | Adapt an existing SAS program, reporting every change and why. |
-| `debug_jenner_log` | Diagnose a run log — root cause and the smallest fix, not a restatement of the message. |
-| `choose_storage_engine` | Pick between Avro, CSV, Parquet, SAS7BDAT and XPT for a scenario, with the tradeoffs. |
-| `explore_dataset` | Profile a dataset: structure first, then distributions. |
-| `federated_query` | Query across files, databases and object stores — `PROC FSQL`/`GQL`/`S3`, which have no SAS equivalent. |
-| `review_jenner_program` | Review for correctness first, then performance. |
+| `jenner_orientation` | The full briefing: what carries over from SAS, where the docs are, what the tools return. |
+| `jenner_beyond_sas` | Getting started with the Jenner-only surface — FSQL, GQL, S3, AI, databases — with a reference for each. Optional `goal`. |
+| `port_sas_program` | Adapt an existing SAS program, changing as little as possible and reporting every change. |
+| `choose_storage_engine` | Pick between Avro, CSV, Parquet, SAS7BDAT and XPT for a scenario, with the traps for each. |
+| `debug_jenner_log` | Diagnose a run log, including the four causes a SAS reading would never suggest. |
 
-Every Jenner-specific claim in these templates is verified against the live
-public API before it is written down, and a test enforces that the templates
-never advise syntax the deployed engine rejects. If you add a claim, run it
-through `run_sas` first.
+Every Jenner-specific claim is verified against the live public API before it
+is written down, every documentation URL is checked to resolve, and a test
+enforces that nothing advises syntax the deployed engine rejects. If you add a
+claim, run it through `run_sas` first.
 
 ## Quickstart
 

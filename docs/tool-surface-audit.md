@@ -163,14 +163,25 @@ model registry, `score_data` becomes worth exposing as a tool rather than a
 Independent of tool count, both are cheap and both are things the SAS server does
 better today:
 
-**Prompt templates.** They ship 8 `@mcp.prompt` templates; we ship none. Prompts
-that teach a model Jenner's actual idioms would raise first-try code quality more
-than any tool would — particularly the places Jenner diverges from SAS:
+**Prompt templates.** They ship 8 `@mcp.prompt` templates; we shipped none.
+Teaching a model Jenner's actual idioms raises first-try code quality more than
+any tool would — particularly the places Jenner diverges from SAS.
 
-- Avro is the default storage engine, not SAS7BDAT
-- `LIBNAME` engine keywords (`avro`, `csv`, `parquet`, `sas7bdat`, `xport`)
-- working end to end in SAS7BDAT vs. using it only at the boundaries
-- `PROC FSQL` / `PROC GQL` / `PROC S3`, which have no SAS equivalent
+*Built. Five templates plus a server `instructions` block; see the README.* Two
+things fell out of doing it that are worth recording, because neither is
+obvious from reading their server:
+
+- **The test for a prompt is "does this tell the model something it does not
+  already know?"** The model can already profile a dataset and review code, so
+  templates for those are padding that costs context and teaches nothing. Five
+  earn their place where eight did not; count is not the target here either.
+- **Prompts are the weaker of the two channels.** Most clients surface
+  `@mcp.prompt` templates as *user-invoked* slash commands, so a model working
+  autonomously never reads one. Server `instructions` are handed over at
+  `initialize` unconditionally. The irreducible core — your SAS applies, Avro
+  is the default, the Jenner-only procs exist, WORK does not persist — belongs
+  there; the templates hold the long forms. Their server sets no `instructions`
+  at all.
 
 **Tool tiering.** `MCP_TIERS=0-4` lets a caller expose a subset. Unnecessary at 4
 tools; necessary at 18. Worth adding when Wave 2 lands, not before.
