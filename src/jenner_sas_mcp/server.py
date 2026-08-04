@@ -27,7 +27,8 @@ import os
 from typing import Any
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+
+from ._compat import Server
 
 __all__ = ["mcp", "main"]
 
@@ -182,7 +183,7 @@ def _parse_dataset_preview(resp: httpx.Response) -> dict[str, Any]:
     }
 
 
-mcp = FastMCP("jenner-sas")
+mcp = Server("jenner-sas")
 
 
 @mcp.tool()
