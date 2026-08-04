@@ -134,6 +134,13 @@ Determinism is **on by default**: the RNG is seeded and `today()`/`datetime()`
 are frozen so the same program yields identical output. Set
 `deterministic=false` for genuine randomness.
 
+## Requirements
+
+Python 3.10+ and the `mcp` SDK. **Both mcp 1.x and 2.x are supported** — 2.0
+removed `mcp.server.fastmcp` and renamed `FastMCP` to `MCPServer`, so the
+package selects the right server class at import time and CI runs the suite
+against both majors.
+
 ## Development
 
 ```bash
@@ -141,6 +148,13 @@ git clone https://github.com/JennerAnalytics/jenner-sas-mcp
 cd jenner-sas-mcp
 uv sync --extra dev          # or: pip install -e ".[dev]"
 pytest                       # unit tests (no network)
+```
+
+To reproduce a specific major locally:
+
+```bash
+uv pip install "mcp[cli]<2"   # or ">=2"
+pytest -q
 ```
 
 Run the server against a local gateway:
