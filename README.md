@@ -19,6 +19,29 @@ standard SAS (DATA steps, PROCs, macros) and it runs as-is.
 | `get_run` | Re-fetch a completed run by id with the **full** (unclipped) log and listing. |
 | `dataset_preview` | Preview the rows of a WORK dataset produced by a run. |
 
+## Prompt templates
+
+The server also ships eight prompts. They exist because a model asked to
+"write some SAS" writes *SAS*, and Jenner diverges from SAS in a few places
+that otherwise produce subtly wrong code — chiefly that **Avro, not SAS7BDAT,
+is the default storage engine**.
+
+| Prompt | What it does |
+|--------|--------------|
+| `jenner_vs_sas` | The orientation: every divergence from SAS that changes what you should write. |
+| `write_jenner_program` | Write a program for a task, with Jenner's defaults already accounted for. Optional `storage_format`. |
+| `port_sas_program` | Adapt an existing SAS program, reporting every change and why. |
+| `debug_jenner_log` | Diagnose a run log — root cause and the smallest fix, not a restatement of the message. |
+| `choose_storage_engine` | Pick between Avro, CSV, Parquet, SAS7BDAT and XPT for a scenario, with the tradeoffs. |
+| `explore_dataset` | Profile a dataset: structure first, then distributions. |
+| `federated_query` | Query across files, databases and object stores — `PROC FSQL`/`GQL`/`S3`, which have no SAS equivalent. |
+| `review_jenner_program` | Review for correctness first, then performance. |
+
+Every Jenner-specific claim in these templates is verified against the live
+public API before it is written down, and a test enforces that the templates
+never advise syntax the deployed engine rejects. If you add a claim, run it
+through `run_sas` first.
+
 ## Quickstart
 
 The server speaks MCP over stdio. The fastest way to run it is with

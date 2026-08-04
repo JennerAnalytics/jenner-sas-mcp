@@ -29,6 +29,8 @@ from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
 
+from .prompts import register_prompts
+
 __all__ = ["mcp", "main"]
 
 DEFAULT_API_URL = "https://api.jenneranalytics.com"
@@ -183,6 +185,11 @@ def _parse_dataset_preview(resp: httpx.Response) -> dict[str, Any]:
 
 
 mcp = FastMCP("jenner-sas")
+
+# Prompt templates. These carry the Jenner-vs-SAS orientation a model needs
+# before it writes anything — chiefly that Avro, not SAS7BDAT, is the default
+# storage engine. See prompts.py.
+register_prompts(mcp)
 
 
 @mcp.tool()
