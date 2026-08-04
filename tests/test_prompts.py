@@ -147,3 +147,24 @@ async def test_prompts_point_at_the_tools_they_need() -> None:
         required = {a.name: "X" for a in (p.arguments or []) if a.required}
         text = await _render(name, **required)
         assert "run_sas" in text, f"{name} never names the run tool"
+
+
+def test_compat_shim_resolves_a_server_class() -> None:
+    """The package must import under both mcp 1.x and 2.x.
+
+    mcp 2.0 removed ``mcp.server.fastmcp`` outright, so a package importing it
+    directly does not load at all on a current index — which is what shipped
+    before this shim existed:
+
+        ModuleNotFoundError: No module named 'mcp.server.fastmcp'
+
+    ``_compat`` picks the right class per major. This asserts the shim resolved
+    to a real server class exposing the surface this package uses, whichever
+    major is installed; the CI matrix runs it under both.
+    """
+    from jenner_sas_mcp._compat import MCP_MAJOR, Server
+
+    assert MCP_MAJOR in (1, 2)
+    assert Server.__name__ in ("FastMCP", "MCPServer")
+    for attr in ("tool", "prompt", "run", "list_tools", "list_prompts", "get_prompt"):
+        assert callable(getattr(Server, attr, None)), f"server class lacks {attr}"

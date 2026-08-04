@@ -63,6 +63,13 @@ jenner-sas-mcp        # starts the stdio server
 > `uvx --from git+https://github.com/JennerAnalytics/jenner-sas-mcp jenner-sas-mcp`
 > or `pip install git+https://github.com/JennerAnalytics/jenner-sas-mcp`.
 
+## Requirements
+
+Python 3.10+ and the `mcp` SDK. **Both mcp 1.x and 2.x are supported** — 2.0
+removed `mcp.server.fastmcp` and renamed `FastMCP` to `MCPServer`, so the
+package selects the right server class at import time
+(`src/jenner_sas_mcp/_compat.py`). CI runs the suite against both majors.
+
 ## Configuration
 
 All configuration is via environment variables:

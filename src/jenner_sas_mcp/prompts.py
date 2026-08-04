@@ -1,6 +1,6 @@
 """Prompt templates for the Jenner MCP server.
 
-Registered via ``register_prompts(mcp)`` on the FastMCP instance.
+Registered via ``register_prompts(mcp)`` on the server instance.
 
 These exist because a model asked to "write some SAS" writes *SAS*, and Jenner
 deliberately diverges from SAS in a few places that silently produce wrong or
@@ -21,7 +21,7 @@ If you add a claim here, run it through ``run_sas`` first.
 
 from __future__ import annotations
 
-from mcp.server.fastmcp import FastMCP
+from ._compat import Server
 
 __all__ = ["register_prompts", "JENNER_DIFFERENCES"]
 
@@ -88,7 +88,7 @@ executing, use `validate_sas` first — it is faster and cannot have side
 effects."""
 
 
-def register_prompts(mcp: FastMCP) -> None:
+def register_prompts(mcp: Server) -> None:
     """Register every prompt template on *mcp*."""
 
     @mcp.prompt()

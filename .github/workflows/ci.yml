@@ -9,8 +9,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
+        # Both mcp majors must work. 2.0 removed `mcp.server.fastmcp` and
+        # renamed FastMCP to MCPServer; src/jenner_sas_mcp/_compat.py picks the
+        # right one. Without this axis a break under either major ships
+        # silently — which is exactly how the package came to be uninstallable
+        # against a current index.
+        mcp-version: ["<2", ">=2"]
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -19,5 +26,9 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       - name: Sync dependencies
         run: uv sync --extra dev
+      - name: Pin the mcp major under test
+        run: uv pip install "mcp[cli]${{ matrix.mcp-version }}"
+      - name: Show resolved versions
+        run: uv run python -c "import importlib.metadata as m; print('mcp', m.version('mcp'))"
       - name: Run tests
         run: uv run pytest -q

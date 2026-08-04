@@ -15,10 +15,10 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    # Upper bound is load-bearing: mcp 2.0 removed `mcp.server.fastmcp`
-    # entirely, so an unpinned install resolves to 2.x and the package fails
-    # to import. Porting to the 2.x server API is tracked separately.
-    "mcp[cli]>=1.2.0,<2",
+    # Both majors are supported; `_compat` picks the server class. mcp 2.0
+    # removed `mcp.server.fastmcp` and renamed FastMCP to MCPServer, but the
+    # decorator surface this package uses is otherwise unchanged.
+    "mcp[cli]>=1.2.0",
     "httpx>=0.27",
 ]
 

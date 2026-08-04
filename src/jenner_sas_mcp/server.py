@@ -27,7 +27,8 @@ import os
 from typing import Any
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+
+from ._compat import Server
 
 from .prompts import register_prompts
 
@@ -184,7 +185,7 @@ def _parse_dataset_preview(resp: httpx.Response) -> dict[str, Any]:
     }
 
 
-mcp = FastMCP("jenner-sas")
+mcp = Server("jenner-sas")
 
 # Prompt templates. These carry the Jenner-vs-SAS orientation a model needs
 # before it writes anything — chiefly that Avro, not SAS7BDAT, is the default
